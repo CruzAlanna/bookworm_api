@@ -9,5 +9,3 @@ class SessionsController < ApplicationController
     end
   end
 end
-
-#code refers to when adding authorization, in application controller

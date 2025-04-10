@@ -1,6 +1,8 @@
 class UsersController < ApplicationController
+  before_action :authorize_request, only: [:update, :destroy]
+
   def index
-    users = User.all
+    users = policy_scope(User)
     render json: users
   end
 
@@ -14,7 +16,8 @@ class UsersController < ApplicationController
       name: params[:name],
       email: params[:email],
       password: params[:password],
-      password_confirmation: params[:password_confirmation]
+      password_confirmation: params[:password_confirmation],
+      role: params[:role]
     )
     if user.save
       render json: { message: 'User created successfully' }, status: :created
@@ -25,11 +28,12 @@ class UsersController < ApplicationController
   
   def update
     user = User.find(params[:id])
+    authorize user
 
     if user.update(
       name: params[:name] || user.name,
       email: params[:email] || user.email,
-      password: params[:password] || user.password,
+      password: params[:password] || user.password
     )
       render json: user
     else
@@ -39,6 +43,9 @@ class UsersController < ApplicationController
 
   def destroy
     user = User.find(params[:id])
+    
+    authorize user
+    
     user.destroy
     render json: { message: 'User removed from Book Club' }, status: :ok
   end

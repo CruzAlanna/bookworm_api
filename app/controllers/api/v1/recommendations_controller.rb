@@ -1,6 +1,8 @@
 class Api::V1::RecommendationsController < ApplicationController
+  before_action :authorize_request, except: [:index]
+
   def index
-    recommendations = Recommendation.all
+    recommendations = policy_scope(Recommendation)
     render json: recommendations
   end
 
@@ -8,10 +10,15 @@ class Api::V1::RecommendationsController < ApplicationController
     recommendation = Recommendation.new(
       title: params[:title],
       author: params[:author],
-      review: params[:review]
+      review: params[:review],
+      user_id: current_user.id
     )
+    authorize recommendation
 
     if recommendation.save
+      puts "--------"
+      puts recommendation.user_id
+      puts "--------"
       render json: recommendation, status: :created
     else 
       render json: { errors: recommendation.errors.full_messages }, status: :unprocessable_entity
@@ -20,9 +27,10 @@ class Api::V1::RecommendationsController < ApplicationController
 
   def update
     recommendation = Recommendation.find(params[:id])
+    authorize recommendation
 
     if recommendation.update(
-      title: params[:name] || recommendation.title,
+      title: params[:title] || recommendation.title,
       author: params[:author] || recommendation.author,
       review: params[:review] || recommendation.review
     )
@@ -34,6 +42,8 @@ class Api::V1::RecommendationsController < ApplicationController
 
   def destroy
     recommendation = Recommendation.find(params[:id])
+    authorize recommendation
+    
     recommendation.destroy
     render json: { message: 'Recommendation removed from Forum' }, status: :ok
   end

@@ -1,7 +1,16 @@
 class Api::V1::MeetingsController < ApplicationController
+  before_action :authorize_request, except: [:index, :show]
+
   def index
-    meetings = Meeting.all
+    meetings = policy_scope(Meeting)
     render json: meetings
+  end
+
+  def show
+    meeting = Meeting.find(params[:id])
+    authorize meeting
+    
+    render json: meeting
   end
 
   def create
@@ -9,6 +18,7 @@ class Api::V1::MeetingsController < ApplicationController
       date: params[:date],
       time: params[:time]
     )
+    authorize meeting
 
     if meeting.save
       render json: meeting, status: :created
@@ -17,13 +27,9 @@ class Api::V1::MeetingsController < ApplicationController
     end
   end
 
-  def show
-    meeting = Meeting.find(params[:id])
-    render json: meeting
-  end
-
   def update
     meeting = Meeting.find(params[:id])
+    authorize meeting
 
     if meeting.update(
       date: params[:date] || meeting.date,
@@ -37,6 +43,8 @@ class Api::V1::MeetingsController < ApplicationController
 
   def destroy
     meeting = Meeting.find(params[:id])
+    authorize meeting
+    
     meeting.destroy
     render json: { message: 'Meeting removed from Schedule' }, status: :ok
   end

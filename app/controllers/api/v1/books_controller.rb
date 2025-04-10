@@ -1,7 +1,16 @@
 class Api::V1::BooksController < ApplicationController
+  before_action :authorize_request, only: [:create, :update, :destroy]
+
   def index
-    books = Book.all
+    books = policy_scope(Book)
     render json: books
+  end
+  
+  def show
+    book = Book.find(params[:id])
+    authorize book
+
+    render json: book
   end
 
   def create
@@ -12,21 +21,23 @@ class Api::V1::BooksController < ApplicationController
       description: params[:description],
       pages: params[:pages]
     )
-
+    authorize book
     if book.save
+      user_book = UserBook.create(user_id: current_user.id, book_id: book.id)
+      puts "--------"
+      puts "user_book.user_id"
+      puts "--------"
+      puts "user_book.book_id"
+      puts "--------"
       render json: book, status: :created
     else 
       render json: { errors: book.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
-  def show
-    book = Book.find(params[:id])
-    render json: book
-  end
-
   def update
     book = Book.find(params[:id])
+    authorize book
 
     if book.update(
       title: params[:name] || book.title,
@@ -43,6 +54,8 @@ class Api::V1::BooksController < ApplicationController
 
   def destroy
     book = Book.find(params[:id])
+    authorize book
+    
     book.destroy
     render json: { message: 'Book removed from Library' }, status: :ok
   end

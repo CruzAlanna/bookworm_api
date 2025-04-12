@@ -40,7 +40,7 @@ class Api::V1::BooksController < ApplicationController
     authorize book
 
     if book.update(
-      title: params[:name] || book.title,
+      title: params[:title] || book.title,
       author: params[:author] || book.author,
       genre: params[:genre] || book.genre,
       description: params[:description] || book.description,
